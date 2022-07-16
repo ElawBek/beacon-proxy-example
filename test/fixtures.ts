@@ -1,13 +1,16 @@
 import { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import {
   CounterV1__factory,
   CounterFactory__factory,
+  CounterV1,
   CounterV2__factory,
+  CounterV2,
+  CounterFactory,
 } from "../typechain-types";
 
-export async function deployFixture() {
+export async function deployFactoryFixture() {
   const [owner, alice] = await ethers.getSigners();
 
   const implV1 = await new CounterV1__factory(owner).deploy();
@@ -19,35 +22,54 @@ export async function deployFixture() {
   return { owner, alice, implV1, factory };
 }
 
-export async function createCountersFixture() {
-  const { owner, alice, factory } = await loadFixture(deployFixture);
-  const implV2 = await new CounterV2__factory(owner).deploy();
-
-  await factory.connect(owner).create("ProxyCounter1");
-  await factory.connect(alice).create("ProxyCounter2");
-
-  const counter1Address = await factory.getCounter(0);
-  const proxy1ver1 = new CounterV1__factory(owner).attach(counter1Address);
-
-  return { owner, alice, factory, proxy1ver1, implV2 };
-}
-
 export async function updateImplementationFixture() {
-  const { owner, alice, factory, proxy1ver1, implV2 } = await loadFixture(
-    createCountersFixture
+  const [owner, alice] = await ethers.getSigners();
+
+  const implV1 = await new CounterV1__factory(owner).deploy();
+
+  const factory = await new CounterFactory__factory(owner).deploy(
+    implV1.address
   );
 
-  for (let i = 0; i < 10; i++) {
-    await proxy1ver1.up();
+  await createCounters(owner, alice, factory);
+
+  const countersV1: CounterV1[] = [];
+
+  for (let i = 0; i < 2; i++) {
+    countersV1.push(
+      new CounterV1__factory().attach(await factory.getCounter(i))
+    );
   }
+
+  for (let i = 0; i < 10; i++) {
+    await countersV1[0].connect(owner).up();
+  }
+
+  const implV2 = await new CounterV2__factory(owner).deploy();
 
   await factory.update(implV2.address);
 
-  const proxyCounter1Address = await factory.getCounter(0);
-  const proxyCounter2Address = await factory.getCounter(1);
+  const countersV2: CounterV2[] = [];
 
-  const proxy1ver2 = new CounterV2__factory(owner).attach(proxyCounter1Address);
-  const proxy2ver2 = new CounterV2__factory(alice).attach(proxyCounter2Address);
+  for (let i = 0; i < 2; i++) {
+    countersV2.push(new CounterV2__factory().attach(countersV1[i].address));
+  }
 
-  return { owner, alice, factory, proxy1ver2, proxy2ver2, implV2 };
+  return {
+    owner,
+    alice,
+    implV2,
+    factory,
+    counter1V2: countersV2[0],
+    counter2V2: countersV2[1],
+  };
+}
+
+export async function createCounters(
+  owner: SignerWithAddress,
+  alice: SignerWithAddress,
+  factory: CounterFactory
+) {
+  await factory.connect(owner).create("ProxyCounter1");
+  await factory.connect(alice).create("ProxyCounter2");
 }

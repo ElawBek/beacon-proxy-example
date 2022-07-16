@@ -45,7 +45,7 @@ contract CounterV2 is Initializable {
     /// @notice transfer ownership to `_newOwner`
     /// @dev `_newOwner` can't be address(0)
     /// emit `OwnershipTransferred` event
-    function transferOwnerShip(address _newOwner) external onlyOwner {
+    function transferOwnership(address _newOwner) external onlyOwner {
         if (_newOwner == address(0)) {
             revert NewOwnerCannotBeAddressZero();
         }
