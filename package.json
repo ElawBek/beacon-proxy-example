@@ -1,11 +1,20 @@
 {
-  "name": "hardhat-project",
+  "name": "hardhat-template",
+  "author": {
+    "name": "Dmitry K. (@elawbek)"
+  },
+  "description": "Hardhat-template",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^1.0.1",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
     "dotenv": "^16.0.1",
-    "hardhat": "^2.10.0"
+    "eslint": "^8.20.0",
+    "hardhat": "^2.10.1",
+    "prettier": "2.7.1",
+    "solhint": "^3.3.7"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.6.0"
+    "@openzeppelin/contracts": "^4.7.1"
   }
 }
